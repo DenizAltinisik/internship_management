@@ -1,0 +1,26 @@
+/* RegisterPage.css */
+.register-page {
+    background-color: #0f82b4; /* Blue background */
+    color: #ffffff; /* White text color */
+    height: 100vh; /* Ensure full height of the viewport */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  button {
+    background-color: #ffffff; /* White button background */
+    color: #0f83b2; /* Blue button text color */
+    border: 1px solid black; /* Black border */
+    padding: 10px 20px;
+    font-size: 16px;
+    margin-top: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  button:hover {
+    background-color: #e0e0e0; /* Light grey on hover */
+    color: #000000; /* Black text on hover */
+  }
+  

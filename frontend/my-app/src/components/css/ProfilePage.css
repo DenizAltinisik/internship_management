@@ -1,0 +1,97 @@
+/* ProfilePage.css */
+
+.profile-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100vh;
+    background-color: #0f83b2; /* Blue background */
+    color: #ffffff; /* White text color */
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    position: relative;
+  }
+  
+  .logout-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: #ffffff; /* White button background */
+    color: #0f83b2; /* Blue button text color */
+    border: 1px solid #000000; /* Black border */
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    text-decoration: none;
+  }
+  
+  .logout-button:hover {
+    background-color: #e0e0e0; /* Light grey on hover */
+    color: #000000; /* Black text on hover */
+  }
+  
+  .profile-container {
+    display: flex;
+    width: 100%;
+    max-width: 1200px;
+    margin-top: 60px;
+  }
+  
+  .left-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-right: 40px;
+  }
+  
+  .profile-picture {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 2px solid #ffffff; /* White border */
+    object-fit: cover;
+    margin-bottom: 20px;
+  }
+  
+  .tabs {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .tab {
+    background-color: #ffffff; /* White tab background */
+    color: #0f83b2; /* Blue tab text color */
+    border: 1px solid #000000; /* Black border */
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    text-decoration: none;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  
+  .tab:hover {
+    background-color: #e0e0e0; /* Light grey on hover */
+    color: #000000; /* Black text on hover */
+  }
+  
+  .center-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    flex-grow: 1;
+    color: #000000; /* Black text color */
+    margin-left: 20px; /* Move information closer to the profile photo and tabs */
+  }
+  
+  .user-details {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  

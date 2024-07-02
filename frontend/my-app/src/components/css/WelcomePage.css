@@ -1,0 +1,41 @@
+/* WelcomePage.css */
+
+.welcome-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #0f83b2; /* Blue background */
+    color: #ffffff; /* White text color */
+    font-family: Arial, sans-serif;
+  }
+  
+  .logo {
+    width: 100px; /* Adjust width as needed */
+    height: auto; /* Maintain aspect ratio */
+    position: absolute;
+    top: 20px; /* Adjust top position */
+    left: 20px; /* Adjust left position */
+  }
+  
+  .button-link {
+    text-decoration: none;
+  }
+  
+  .button {
+    background-color: #ffffff; /* White button background */
+    color: #0f83b2; /* Blue button text color */
+    border: 1px solid #000000; /* Black border */
+    padding: 10px 20px;
+    font-size: 16px;
+    margin: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  .button:hover {
+    background-color: #e0e0e0; /* Light grey on hover */
+    color: #000000; /* Black text on hover */
+  }
+  

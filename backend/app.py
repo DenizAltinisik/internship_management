@@ -95,11 +95,54 @@ class ProtectedResource(Resource):
         current_user = get_jwt_identity()
         return {"message": f"Hello, {current_user}"}, 200
 
+class UserProfile(Resource):
+    @jwt_required()
+    def get(self):
+        current_user_email = get_jwt_identity()
+        user = db.users.find_one({"email": current_user_email}, {"_id": 0, "password": 0})
+        if user:
+            return jsonify(user)
+        else:
+            return {"message": "User not found"}, 404
+        
+class UserProfileUpdate(Resource):
+    @jwt_required()
+    def put(self):
+        data = request.form.to_dict()
+        current_user_email = get_jwt_identity()
+
+        update_fields = {
+            "name": data.get('name'),
+            "surname": data.get('surname'),
+            "phone": data.get('phone'),
+            "school": data.get('school'),
+            "department": data.get('department'),
+            "gender": data.get('gender'),
+            "birthdate": data.get('birthdate'),
+        }
+
+        if 'profile_picture' in request.files:
+            profile_picture_file = request.files['profile_picture']
+            profile_picture_path = os.path.join(app.config['UPLOAD_FOLDER'], profile_picture_file.filename)
+            profile_picture_file.save(profile_picture_path)
+            update_fields["profile_picture"] = profile_picture_path
+
+        try:
+            result = db.users.update_one({"email": current_user_email}, {"$set": update_fields})
+            if result.matched_count == 1:
+                return {"message": "Profile updated successfully"}, 200
+            else:
+                return {"message": "User not found"}, 404
+        except Exception as e:
+            return {"message": str(e)}, 500
+
+        
+
 api.add_resource(UserRegistration, '/register')
 api.add_resource(UserLogin, '/login')
 api.add_resource(ProtectedResource, '/protected')
-
-
+api.add_resource(UserProfile, '/profile')
+api.add_resource(UserProfileUpdate, '/profile')
 @app.route('/add_user', methods=['POST'])
 def add_user():
     data = request.form

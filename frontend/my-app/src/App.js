@@ -4,7 +4,8 @@ import WelcomePage from './components/WelcomePage';
 import RegisterPage from './components/RegisterPage';
 import LoginPage from './components/LoginPage';
 import Dashboard from './components/Dashboard';
-import  Profile  from './components/Profile';
+import ProfilePage from './components/ProfilePage';
+import  ProfileEdit  from './components/ProfileEdit';
 function App() {
   return (
     <Router>
@@ -13,7 +14,8 @@ function App() {
           <Route path="/" element={<WelcomePage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/changeProfile" element={<ProfileEdit />} />
           
         </Routes>
       </div>

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { TextField, Button, Container, Box, Typography } from '@mui/material';
+import './css/LoginPage.css'; // Import your custom CSS file for additional styles
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -14,31 +16,52 @@ const LoginPage = () => {
       if (response.data.access_token) {
         // Save the token to localStorage or context
         localStorage.setItem('token', response.data.access_token);
-        // Navigate to the dashboard
+        // Navigate to the dashboard or profile page after successful login
         navigate('/profile');
       }
     } catch (error) {
-      console.error(error);
+      console.error('Login failed:', error);
       alert('Login failed. Please check your credentials.');
     }
   };
 
   return (
-    <div>
-      <h1>Login</h1>
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button onClick={handleLogin}>Login</button>
+    <div className="login-page">
+      <Container maxWidth="sm">
+        <Box sx={{ mt: 4, mb: 4 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Login
+          </Typography>
+          <form>
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <Button
+              type="button"
+              fullWidth
+              variant="contained"
+              color="primary"
+              onClick={handleLogin}
+              sx={{ mt: 3, mb: 2 }}
+            >
+              Login
+            </Button>
+          </form>
+        </Box>
+      </Container>
     </div>
   );
 }

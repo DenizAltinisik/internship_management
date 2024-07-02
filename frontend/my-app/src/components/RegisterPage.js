@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { TextField, Button, Container, Box, Typography, Alert } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import logo from './assets/logoyazisiz.png'; // Import your logo image
+import './css/RegisterPage.css'; // Import your custom CSS file for additional styles
+
+const logoStyle = {
+  width: '100px', // Adjust width as needed
+  height: 'auto', // Maintain aspect ratio
+  position: 'absolute',
+  top: '20px', // Adjust top position
+  left: '20px', // Adjust left position
+};
 
 const RegisterPage = () => {
   const [email, setEmail] = useState('');
@@ -9,71 +21,114 @@ const RegisterPage = () => {
   const [phone, setPhone] = useState('');
   const [school, setSchool] = useState('');
   const [department, setDepartment] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const navigate = useNavigate();
 
   const handleRegister = async () => {
     try {
-      const response = await axios.post('https://localhost:5000/register', { email, password, name, surname, phone, school, department});
+      const response = await axios.post('https://localhost:5000/register', {
+        email,
+        password,
+        name,
+        surname,
+        phone,
+        school,
+        department
+      });
       console.log(response.data);
+      setSuccessMessage('Successful registration');
+      setTimeout(() => {
+        navigate('/');
+      }, 3000); // Redirect to the welcome page after 3 seconds
     } catch (error) {
-      console.error(error);
+      console.error('Registration failed:', error);
+      setErrorMessage('Registration failed. Please try again.');
     }
   };
 
   return (
-    <div>
-      <h1>Register</h1>
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <br></br>
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <br></br>
-      <input
-        type="name"
-        placeholder="Name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-      <br></br>
-      <input
-        type="surname"
-        placeholder="Surname"
-        value={surname}
-        onChange={(e) => setSurname(e.target.value)}
-      />
-      <br></br>
-      <input
-        type="phone"
-        placeholder="Phone"
-        value={phone}
-        onChange={(e) => setPhone(e.target.value)}
-      />
-      <br></br>
-      <input
-        type="school"
-        placeholder="School"
-        value={school}
-        onChange={(e) => setSchool(e.target.value)}
-      />
-      <br></br>
-      <input
-        type="department"
-        placeholder="Department"
-        value={department}
-        onChange={(e) => setDepartment(e.target.value)}
-      />
-      <br></br>
-      <button onClick={handleRegister}>Register</button>
+    <div className="register-page">
+      <Container maxWidth="sm">
+        <img src={logo} alt="Logo" style={logoStyle} />
+        <Box sx={{ mt: 4, mb: 4 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Register
+          </Typography>
+          {successMessage && <Alert severity="success">{successMessage}</Alert>}
+          {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+          <form>
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Surname"
+              type="text"
+              value={surname}
+              onChange={(e) => setSurname(e.target.value)}
+            />
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Phone"
+              type="text"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+            <TextField
+              fullWidth
+              margin="normal"
+              label="School"
+              type="text"
+              value={school}
+              onChange={(e) => setSchool(e.target.value)}
+            />
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Department"
+              type="text"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+            />
+            <Button
+              type="button"
+              fullWidth
+              variant="contained"
+              color="primary"
+              onClick={handleRegister}
+              sx={{ mt: 3, mb: 2 }}
+            >
+              Register
+            </Button>
+          </form>
+        </Box>
+      </Container>
     </div>
   );
-}
+};
 
 export default RegisterPage;

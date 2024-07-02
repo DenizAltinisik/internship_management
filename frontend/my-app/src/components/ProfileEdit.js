@@ -3,10 +3,11 @@ import axios from 'axios';
 import 'react-phone-input-2/lib/style.css';
 import PhoneInput from 'react-phone-input-2';
 import { TextField, Button, MenuItem, Select, InputLabel, FormControl, Container, Box, Typography } from '@mui/material';
-import defaultProfilePicture from './assets/default-profile.png'; // Yolu güncelledik
-import './Profile.css';
+import defaultProfilePicture from './assets/default-profile.png'; // Adjust path if necessary
+import { useNavigate } from 'react-router-dom';
+import './css/ProfileEdit.css';
 
-function Profile() {
+const ProfilePage = () => {
   const [user, setUser] = useState({
     name: '',
     surname: '',
@@ -20,6 +21,30 @@ function Profile() {
   });
   const [profilePictureFile, setProfilePictureFile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      try {
+        const response = await axios.get('https://localhost:5000/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setUser(response.data);
+        setIsEditing(true);
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        navigate('/login');
+      }
+    };
+
+    fetchUserProfile();
+  }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -54,6 +79,12 @@ function Profile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
     const formData = new FormData();
     for (const key in user) {
       formData.append(key, user[key]);
@@ -63,45 +94,21 @@ function Profile() {
     }
 
     try {
-      if (isEditing) {
-        await axios.put(`http://localhost:5000/update_user/${user.email}`, formData);
-        alert('User updated successfully!');
-      } else {
-        await axios.post('http://localhost:5000/add_user', formData);
-        alert('User added successfully!');
-      }
+      await axios.put('https://localhost:5000/profile', formData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Profile updated successfully!');
     } catch (error) {
-      console.error('There was an error saving the user!', error);
-      alert('Error: ' + error.response.data.error);
+      console.error('Error updating profile:', error);
+      alert('Error: ' + error.response?.data?.message || error.message);
     }
   };
-
-  const fetchUser = async (email) => {
-    try {
-      const response = await axios.get(`http://localhost:5000/get_user/${email}`);
-      setUser(response.data);
-      setIsEditing(true);
-    } catch (error) {
-      if (error.response && error.response.status === 404) {
-        setIsEditing(false);
-      } else {
-        console.error('There was an error fetching the user!', error);
-      }
-    }
-  };
-
-  useEffect(() => {
-    const email = prompt('Please enter your email to manage your profile');
-    if (email) {
-      fetchUser(email);
-    }
-  }, []);
 
   return (
     <Container maxWidth="sm">
       <Box sx={{ mt: 4, mb: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
-          {isEditing ? 'Edit Profile' : 'Add Profile'}
+          Edit Profile
         </Typography>
         <form onSubmit={handleSubmit}>
           <TextField
@@ -128,6 +135,7 @@ function Profile() {
             type="email"
             value={user.email}
             onChange={handleChange}
+            disabled
           />
           <FormControl fullWidth margin="normal">
             <label>Phone:</label>
@@ -138,7 +146,7 @@ function Profile() {
               inputStyle={{
                 width: '100%',
                 padding: '10px',
-                paddingLeft: '58px', // Sol tarafı kesmek için padding ayarı
+                paddingLeft: '58px',
                 fontSize: '16px',
                 borderRadius: '5px',
                 border: '1px solid #ccc',
@@ -148,7 +156,7 @@ function Profile() {
                 position: 'relative'
               }}
               buttonStyle={{
-                position: 'absolute', // Ülke bayrağı ve kodunun konumunu ayarlamak için
+                position: 'absolute',
                 left: '0',
                 top: '0',
                 height: '100%',
@@ -235,12 +243,12 @@ function Profile() {
             color="primary"
             sx={{ mt: 3, mb: 2 }}
           >
-            {isEditing ? 'Update' : 'Add'} Profile
+            Update Profile
           </Button>
         </form>
       </Box>
     </Container>
   );
-}
+};
 
-export default Profile;
+export default ProfilePage;
