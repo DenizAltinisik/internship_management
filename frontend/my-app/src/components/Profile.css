@@ -1,0 +1,63 @@
+.profile-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .profile-form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+    position: relative; /* Telefon numarası girişi için */
+  }
+  
+  .form-group label {
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+  
+  .form-group input,
+  .form-group select {
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    width: 100%;
+  }
+  
+  .form-group .react-tel-input {
+    width: 100%;
+  }
+  
+  .form-group .react-tel-input .form-control {
+    padding-left: 58px; /* Ülke bayrağı ve kodunun düzgün yerleşmesi için */
+  }
+  
+  .profile-picture {
+    margin-top: 10px;
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    border: 2px solid #ccc;
+  }
+  
+  .submit-button {
+    padding: 10px;
+    font-size: 16px;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .submit-button:hover {
+    background-color: #0056b3;
+  }
+  
