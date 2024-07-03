@@ -17,7 +17,7 @@ const LoginPage = () => {
         // Save the token to localStorage or context
         localStorage.setItem('token', response.data.access_token);
         // Navigate to the dashboard or profile page after successful login
-        navigate('/profile');
+        navigate('/dashboard');
       }
     } catch (error) {
       console.error('Login failed:', error);
