@@ -63,8 +63,8 @@ const ProfilePage = () => {
         <div className="center-section">
           <h1>Profile</h1>
           <div className="user-details">
-            <p><strong>Name:</strong> {user.name}</p>
-            <p><strong>Surname:</strong> {user.surname}</p>
+            <p><strong>Name:</strong> {user.name} {user.surname}</p>
+            <p><strong>Role:</strong> {user.role}</p>
             <p><strong>Email:</strong> {user.email}</p>
             <p><strong>Phone:</strong> {user.phone}</p>
             <p><strong>School:</strong> {user.school}</p>
