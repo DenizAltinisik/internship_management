@@ -91,8 +91,6 @@ class UserRegistration(Resource):
             logging.error(f"User registration failed: {e}")
             return {"message": str(e)}, 500
 
-
-
 class UserLogin(Resource):
     def post(self):
         data = request.get_json()
@@ -161,7 +159,6 @@ class UserProfileUpdate(Resource):
         except Exception as e:
             return {"message": str(e)}, 500
 
-
 class UserTasks(Resource):
     @jwt_required()
     def get(self):
@@ -171,6 +168,7 @@ class UserTasks(Resource):
             return jsonify(user['tasks'])
         else:
             return {"message": "User not found"}, 404
+
 class AddTask(Resource):
     @jwt_required()
     def post(self):
@@ -202,11 +200,34 @@ class AddTask(Resource):
         except Exception as e:
             app.logger.error(f"Error adding task: {e}")
             return {"message": str(e)}, 500
+class UpdateTaskStatus(Resource):
+    @jwt_required()
+    def put(self):
+        try:
+            data = request.get_json()
+            app.logger.debug(f"Received data for update: {data}")
 
+            task_id = data.get('task_id')
+            new_status = data.get('status')
 
+            if not task_id or not new_status:
+                return {"message": "Task ID and new status are required"}, 400
 
+            current_user_email = get_jwt_identity()
 
+            result = db.users.update_one(
+                {"email": current_user_email, "tasks._id": task_id},
+                {"$set": {"tasks.$.status": new_status}}
+            )
 
+            if result.modified_count == 1:
+                return {"message": "Task status updated successfully"}, 200
+            else:
+                return {"message": "Task not found or no changes made"}, 404
+        except Exception as e:
+            app.logger.error(f"Error updating task status: {e}")
+            return {"message": str(e)}, 500
+        
 api.add_resource(UserRegistration, '/register')
 api.add_resource(UserLogin, '/login')
 api.add_resource(ProtectedResource, '/protected')
@@ -214,6 +235,7 @@ api.add_resource(UserProfile, '/profile')
 api.add_resource(UserProfileUpdate, '/profile')
 api.add_resource(UserTasks, '/tasks')
 api.add_resource(AddTask, '/addTask')
+api.add_resource(UpdateTaskStatus, '/updateTaskStatus')
+
 if __name__ == '__main__':
-   app.run(debug=True, ssl_context=('server.crt', 'server.key')) 
-    
+   app.run(debug=True, ssl_context=('server.crt', 'server.key'))

@@ -1,25 +1,25 @@
-/* Dashboard.css */
-
-body {
-    background-color: #0f83b2; /* Set page background color */
-  }
-  
-  .task-card {
+.task-card {
     padding: 16px;
     margin-bottom: 8px;
+    background-color: #f9f9f9;
     border-radius: 4px;
-  }
-  
-  .todo {
-    background-color: orange; /* Example color for 'To Do' tasks */
-    
-  }
-  
-  .test {
-    background-color: yellow; /* Example color for 'Test' tasks */
-  }
-  
-  .done {
-    background-color: green; /* Example color for 'Done' tasks */
-  }
-  
+    border: 1px solid #ddd;
+}
+
+.task-card.todo {
+    border-left: 5px solid #ffeb3b;
+}
+
+.task-card.test {
+    border-left: 5px solid #03a9f4;
+}
+
+.task-card.done {
+    border-left: 5px solid #4caf50;
+}
+
+.task-card button {
+    padding: 4px 8px;
+    font-size: 12px;
+    min-width: 80px;
+}
