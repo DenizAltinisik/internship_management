@@ -53,6 +53,7 @@ const ProfilePage = () => {
             className="profile-picture"
           />
           <nav className="tabs">
+            <Link to="/dashboard" className="tab">Dashboard</Link>
             <Link to="/tasks" className="tab">Tasks</Link>
             <Link to="/projects" className="tab">Projects</Link>
             <Link to="/todos" className="tab">Todos</Link>

@@ -42,6 +42,7 @@ STATUS_TEST_ASAMASI = "test_asamasi"
 STATUS_YAPILDI = "yapildi"
 STATUS_TAKEN = "taken"
 
+# Add the task structure in user schema during registration
 class UserRegistration(Resource):
     def post(self):
         data = request.get_json()
@@ -55,9 +56,13 @@ class UserRegistration(Resource):
         phone = data.get('phone')
         school = data.get('school')
         department = data.get('department')
+        role = data.get('role')
 
-        if not email or not password or not name or not surname:
-            return {"message": "Email, password and full name are required"}, 400
+        if not email or not password or not name or not surname or not role:
+            return {"message": "Email, password, name, surname, and role are required"}, 400
+
+        if role not in ['admin', 'intern']:
+            return {"message": "Role must be either 'admin' or 'intern'"}, 400
 
         # Hash the password
         try:
@@ -69,12 +74,24 @@ class UserRegistration(Resource):
 
         # Insert user data into MongoDB
         try:
-            db.users.insert_one({"email": email, "password": hashed_password, "name": name, "surname": surname, "phone": phone, "school": school, "department": department})
+            db.users.insert_one({
+                "email": email, 
+                "password": hashed_password, 
+                "name": name, 
+                "surname": surname, 
+                "phone": phone, 
+                "school": school, 
+                "department": department,
+                "role": role,
+                "tasks": []  # Initialize tasks as an empty list
+            })
             logging.info(f"User {email} registered successfully")
             return {"message": "User registered successfully"}, 201
         except Exception as e:
             logging.error(f"User registration failed: {e}")
             return {"message": str(e)}, 500
+
+
 
 class UserLogin(Resource):
     def post(self):
@@ -144,70 +161,59 @@ class UserProfileUpdate(Resource):
         except Exception as e:
             return {"message": str(e)}, 500
 
-class TaskCreate(Resource):
+
+class UserTasks(Resource):
+    @jwt_required()
+    def get(self):
+        current_user_email = get_jwt_identity()
+        user = db.users.find_one({"email": current_user_email}, {"tasks": 1, "_id": 0})
+        if user:
+            return jsonify(user['tasks'])
+        else:
+            return {"message": "User not found"}, 404
+class AddTask(Resource):
     @jwt_required()
     def post(self):
-        data = request.get_json()
-        task_name = data.get('task_name')
-        task_description = data.get('task_description')
-
-        if not task_name or not task_description:
-            return {"message": "Task name and description are required"}, 400
-
-        task = {
-            "task_name": task_name,
-            "task_description": task_description,
-            "status": STATUS_UNDONE,
-        }
-
         try:
-            result = db.tasks.insert_one(task)
-            task['_id'] = str(result.inserted_id)
-            return jsonify(task)
+            data = request.get_json()
+            app.logger.debug(f"Received data: {data}")
+
+            if not data:
+                return {"message": "No input data provided"}, 400
+
+            task_header = data.get('header')
+            task_details = data.get('details')
+            task_status = data.get('status')
+
+            if not task_header or not task_details or not task_status:
+                return {"message": "Header, details, and status are required"}, 400
+
+            current_user_email = get_jwt_identity()
+
+            task = {
+                "_id": str(ObjectId()),  # Generate a new ObjectId
+                "header": task_header,
+                "details": task_details,
+                "status": task_status
+            }
+
+            db.users.update_one({"email": current_user_email}, {"$push": {"tasks": task}})
+            return {"message": "Task added successfully"}, 201
         except Exception as e:
+            app.logger.error(f"Error adding task: {e}")
             return {"message": str(e)}, 500
 
 
 
 
-class TaskList(Resource):
-    @jwt_required()
-    def get(self):
-        current_user_email = get_jwt_identity()
-        tasks = list(db.tasks.find({"status": STATUS_UNDONE, "taken_by": {"$ne": current_user_email}}))
-        for task in tasks:
-            task['_id'] = str(task['_id'])
-        return jsonify(tasks)
-
-class TaskUpdate(Resource):
-    @jwt_required()
-    def put(self, task_id):
-        data = request.get_json()
-        current_user_email = get_jwt_identity()
-        new_status = data.get('status')
-        taken_by = data.get('taken_by', None)
-
-        update_fields = {"status": new_status}
-        if taken_by:
-            update_fields["taken_by"] = current_user_email
-
-        try:
-            result = db.tasks.update_one({"_id": ObjectId(task_id)}, {"$set": update_fields})
-            if result.matched_count == 1:
-                return {"message": "Task updated successfully"}, 200
-            else:
-                return {"message": "Task not found"}, 404
-        except Exception as e:
-            return {"message": str(e)}, 500    
 
 api.add_resource(UserRegistration, '/register')
 api.add_resource(UserLogin, '/login')
 api.add_resource(ProtectedResource, '/protected')
 api.add_resource(UserProfile, '/profile')
 api.add_resource(UserProfileUpdate, '/profile')
-api.add_resource(TaskList, '/tasks')
-api.add_resource(TaskUpdate, '/tasks/<string:task_id>')
-api.add_resource(TaskCreate, '/tasks')
-
+api.add_resource(UserTasks, '/tasks')
+api.add_resource(AddTask, '/addTask')
 if __name__ == '__main__':
-    app.run(debug=True, ssl_context=('server.crt', 'server.key'))
+   app.run(debug=True, ssl_context=('server.crt', 'server.key')) 
+    

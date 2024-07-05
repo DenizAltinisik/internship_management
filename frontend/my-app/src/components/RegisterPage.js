@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { TextField, Button, Container, Box, Typography, Alert } from '@mui/material';
+import { TextField, Button, Container, Box, Typography, Alert, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import logo from './assets/logoyazisiz.png'; // Import your logo image
 import './css/RegisterPage.css'; // Import your custom CSS file for additional styles
@@ -21,6 +21,7 @@ const RegisterPage = () => {
   const [phone, setPhone] = useState('');
   const [school, setSchool] = useState('');
   const [department, setDepartment] = useState('');
+  const [role, setRole] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
@@ -34,7 +35,8 @@ const RegisterPage = () => {
         surname,
         phone,
         school,
-        department
+        department,
+        role
       });
       console.log(response.data);
       setSuccessMessage('Successful registration');
@@ -114,6 +116,16 @@ const RegisterPage = () => {
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
             />
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Role</InputLabel>
+              <Select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+              >
+                <MenuItem value="admin">Admin</MenuItem>
+                <MenuItem value="intern">Intern</MenuItem>
+              </Select>
+            </FormControl>
             <Button
               type="button"
               fullWidth
