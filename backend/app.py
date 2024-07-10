@@ -163,9 +163,19 @@ class UserTasks(Resource):
     @jwt_required()
     def get(self):
         current_user_email = get_jwt_identity()
-        user = db.users.find_one({"email": current_user_email}, {"tasks": 1, "_id": 0})
+        user = db.users.find_one({"email": current_user_email}, {"tasks": 1,  "role": 1})  # Include fields for name, surname, role        role = user.get('role')
+        
         if user:
-            return jsonify(user['tasks'])
+            if user.get('role', '') == 'intern':
+                print(f"User Info: Name: {user.get('name', '')}, Surname: {user.get('surname', '')}, Role: {user.get('role', '')}")
+                return jsonify(user['tasks'])
+            elif user.get('role', '') == 'admin':
+                # Fetch tasks of all users
+                tasks = list(db.users.find({}, {"tasks": 1, "_id": 0}))
+                tasks = [task for user_tasks in tasks for task in user_tasks.get('tasks', [])]
+                return jsonify(tasks)
+            else:
+                return {"message": "Unknown role"}, 400
         else:
             return {"message": "User not found"}, 404
 

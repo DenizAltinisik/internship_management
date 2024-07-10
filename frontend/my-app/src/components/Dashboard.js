@@ -203,22 +203,24 @@ const Dashboard = () => {
                                                                     <TableCell>
                                                                         <Typography variant="subtitle1">{task.header}</Typography>
                                                                         <Typography variant="body2">{task.details}</Typography>
-                                                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                                                                            <Button
-                                                                                variant="contained"
-                                                                                color="primary"
-                                                                                onClick={() => moveForward(task._id)}
-                                                                            >
-                                                                                Move Forward
-                                                                            </Button>
-                                                                            <Button
-                                                                                variant="contained"
-                                                                                color="secondary"
-                                                                                onClick={() => moveBackward(task._id)}
-                                                                            >
-                                                                                Move Backward
-                                                                            </Button>
-                                                                        </Box>
+                                                                        {user?.role !== 'admin' && (
+                                                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                                                                                <Button
+                                                                                    variant="contained"
+                                                                                    color="primary"
+                                                                                    onClick={() => moveForward(task._id)}
+                                                                                >
+                                                                                    Move Forward
+                                                                                </Button>
+                                                                                <Button
+                                                                                    variant="contained"
+                                                                                    color="secondary"
+                                                                                    onClick={() => moveBackward(task._id)}
+                                                                                >
+                                                                                    Move Backward
+                                                                                </Button>
+                                                                            </Box>
+                                                                        )}
                                                                     </TableCell>
                                                                 </TableRow>
                                                             )}
@@ -244,4 +246,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

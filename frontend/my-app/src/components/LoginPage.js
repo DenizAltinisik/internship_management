@@ -25,6 +25,13 @@ const LoginPage = () => {
     }
   };
 
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault(); // Prevent the default form submission behavior
+      handleLogin(); // Call your login function
+    }
+  };
+
   return (
     <div className="login-page">
       <Container maxWidth="sm">
@@ -40,6 +47,7 @@ const LoginPage = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onKeyPress={handleKeyPress} // Call handleKeyPress on key press
             />
             <TextField
               fullWidth
@@ -48,6 +56,7 @@ const LoginPage = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onKeyPress={handleKeyPress} // Call handleKeyPress on key press
             />
             <Button
               type="button"
