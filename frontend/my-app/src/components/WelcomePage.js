@@ -6,7 +6,7 @@ import './css/WelcomePage.css'; // Import your CSS file for styling
 const WelcomePage = () => {
   return (
     <div className="welcome-page">
-      <img src={logo} alt="Logo" className="logo" />
+      
       <h1>Welcome!</h1>
       <Link to="/register" className="button-link">
         <button className="button">Register</button>

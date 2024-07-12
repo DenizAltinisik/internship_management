@@ -7,6 +7,7 @@ import bcrypt
 import logging
 import os
 from bson import ObjectId
+from functools import wraps
 
 app = Flask(__name__)
 api = Api(app)
@@ -163,14 +164,14 @@ class UserTasks(Resource):
     @jwt_required()
     def get(self):
         current_user_email = get_jwt_identity()
-        user = db.users.find_one({"email": current_user_email}, {"tasks": 1,  "role": 1})  # Include fields for name, surname, role        role = user.get('role')
+        user = db.users.find_one({"email": current_user_email}, {"tasks": 1, "name": 1, "surname": 1, "role": 1})
+        role = user.get('role')
         
         if user:
-            if user.get('role', '') == 'intern':
-                print(f"User Info: Name: {user.get('name', '')}, Surname: {user.get('surname', '')}, Role: {user.get('role', '')}")
-                return jsonify(user['tasks'])
-            elif user.get('role', '') == 'admin':
-                # Fetch tasks of all users
+            if role == 'intern':
+                tasks = user['tasks']
+                return jsonify(tasks)
+            elif role == 'admin':
                 tasks = list(db.users.find({}, {"tasks": 1, "_id": 0}))
                 tasks = [task for user_tasks in tasks for task in user_tasks.get('tasks', [])]
                 return jsonify(tasks)
@@ -178,6 +179,7 @@ class UserTasks(Resource):
                 return {"message": "Unknown role"}, 400
         else:
             return {"message": "User not found"}, 404
+
 
 class AddTask(Resource):
     @jwt_required()
@@ -197,12 +199,15 @@ class AddTask(Resource):
                 return {"message": "Header, details, and status are required"}, 400
 
             current_user_email = get_jwt_identity()
+            user = db.users.find_one({"email": current_user_email}, {"name": 1, "surname": 1})
+            owner_name = f"{user['name']} {user['surname']}"
 
             task = {
                 "_id": str(ObjectId()),  # Generate a new ObjectId
                 "header": task_header,
                 "details": task_details,
-                "status": task_status
+                "status": task_status,
+                "owner": owner_name  # Add the owner's name to the task
             }
 
             db.users.update_one({"email": current_user_email}, {"$push": {"tasks": task}})
@@ -210,6 +215,7 @@ class AddTask(Resource):
         except Exception as e:
             app.logger.error(f"Error adding task: {e}")
             return {"message": str(e)}, 500
+
 class UpdateTaskStatus(Resource):
     @jwt_required()
     def put(self):
@@ -238,6 +244,138 @@ class UpdateTaskStatus(Resource):
             app.logger.error(f"Error updating task status: {e}")
             return {"message": str(e)}, 500
         
+
+class GetProjects(Resource):
+    @jwt_required()
+    def get(self):
+        try:
+            projects = list(db.projects.find({}))
+            for project in projects:
+                project['_id'] = str(project['_id'])
+            return jsonify(projects)
+        except Exception as e:
+            return {"message": str(e)}, 500
+
+class GetUserNames(Resource):
+    @jwt_required()
+    def get(self):
+        try:
+            users = db.users.find({}, {"email": 1, "name": 1, "surname": 1})
+            user_names = {user['email']: f"{user['name']} {user['surname']}" for user in users}
+            return jsonify(user_names)
+        except Exception as e:
+            return {"message": str(e)}, 500
+
+class GetProjectTasks(Resource):
+    @jwt_required()
+    def get(self, project_id):
+        try:
+            tasks = list(db.tasks.find({"project_id": project_id}))
+            for task in tasks:
+                task['_id'] = str(task['_id'])
+            return jsonify(tasks)
+        except Exception as e:
+            return {"message": str(e)}, 500
+
+def admin_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        current_user_email = get_jwt_identity()
+        user = db.users.find_one({"email": current_user_email})
+        if user and user.get("role") == "admin":
+            return fn(*args, **kwargs)
+        else:
+            return {"message": "Admin access required"}, 403
+    return wrapper
+
+class AddProject(Resource):
+    @jwt_required()
+    @admin_required
+    def post(self):
+        try:
+            data = request.get_json()
+            if not data:
+                return {"message": "No input data provided"}, 400
+
+            project_name = data.get('project_name')
+            description = data.get('description')
+            status = data.get('status')
+
+            if not project_name or not description or not status:
+                return {"message": "Project name, description, and status are required"}, 400
+
+            project = {
+                "project_name": project_name,
+                "description": description,
+                "status": status
+            }
+
+            db.projects.insert_one(project)
+            return {"message": "Project added successfully"}, 201
+        except Exception as e:
+            return {"message": str(e)}, 500
+
+class UpdateProject(Resource):
+    @jwt_required()
+    @admin_required
+    def put(self, project_id):
+        try:
+            data = request.get_json()
+            if not data:
+                return {"message": "No input data provided"}, 400
+
+            project_name = data.get('project_name')
+            description = data.get('description')
+            status = data.get('status')
+
+            if not project_name or not description or not status:
+                return {"message": "Project name, description, and status are required"}, 400
+
+            project = {
+                "project_name": project_name,
+                "description": description,
+                "status": status
+            }
+
+            result = db.projects.update_one({"_id": ObjectId(project_id)}, {"$set": project})
+            if result.matched_count == 1:
+                return {"message": "Project updated successfully"}, 200
+            else:
+                return {"message": "Project not found"}, 404
+        except Exception as e:
+            return {"message": str(e)}, 500
+
+class DeleteProject(Resource):
+    @jwt_required()
+    @admin_required
+    def delete(self, project_id):
+        try:
+            result = db.projects.delete_one({"_id": ObjectId(project_id)})
+            if result.deleted_count == 1:
+                return {"message": "Project deleted successfully"}, 200
+            else:
+                return {"message": "Project not found"}, 404
+        except Exception as e:
+            return {"message": str(e)}, 500
+
+class AssignTaskToProject(Resource):
+    @jwt_required()
+    def post(self, project_id):
+        try:
+            data = request.get_json()
+            task_id = data.get('task_id')
+
+            if not task_id:
+                return {"message": "Task ID is required"}, 400
+
+            result = db.tasks.update_one({"_id": ObjectId(task_id)}, {"$set": {"project_id": project_id}})
+            if result.matched_count == 1:
+                return {"message": "Task assigned to project successfully"}, 200
+            else:
+                return {"message": "Task not found"}, 404
+        except Exception as e:
+            return {"message": str(e)}, 500
+
 api.add_resource(UserRegistration, '/register')
 api.add_resource(UserLogin, '/login')
 api.add_resource(ProtectedResource, '/protected')
@@ -246,6 +384,13 @@ api.add_resource(UserProfileUpdate, '/profile')
 api.add_resource(UserTasks, '/tasks')
 api.add_resource(AddTask, '/addTask')
 api.add_resource(UpdateTaskStatus, '/updateTaskStatus')
+api.add_resource(GetProjects, '/get_projects')
+api.add_resource(GetProjectTasks, '/get_project_tasks/<project_id>')
+api.add_resource(GetUserNames, '/get_user_names')
+api.add_resource(AddProject, '/add_project')
+api.add_resource(UpdateProject, '/update_project/<project_id>')
+api.add_resource(DeleteProject, '/delete_project/<project_id>')
+api.add_resource(AssignTaskToProject, '/assign_task_to_project/<project_id>')
 
 if __name__ == '__main__':
    app.run(debug=True, ssl_context=('server.crt', 'server.key'))

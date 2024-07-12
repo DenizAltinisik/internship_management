@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { TextField, Button, Container, Box, Typography } from '@mui/material';
 import './css/LoginPage.css'; // Import your custom CSS file for additional styles
 
-const LoginPage = () => {
+const LoginPage = ({ setIsAuthenticated }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
@@ -14,9 +14,11 @@ const LoginPage = () => {
       const response = await axios.post('https://localhost:5000/login', { email, password });
       console.log(response.data);
       if (response.data.access_token) {
-        // Save the token to localStorage or context
+        // Save the token to localStorage
         localStorage.setItem('token', response.data.access_token);
-        // Navigate to the dashboard or profile page after successful login
+        // Set the authentication state to true
+        setIsAuthenticated(true);
+        // Navigate to the profile page after successful login
         navigate('/profile');
       }
     } catch (error) {

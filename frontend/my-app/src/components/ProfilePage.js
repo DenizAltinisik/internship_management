@@ -43,7 +43,7 @@ const ProfilePage = () => {
 
   return (
     <div className="profile-page">
-        <img src={logo} alt="Logo" className="logo" />
+      <img src={logo} alt="Logo" className="logo" />
       <button className="logout-button" onClick={handleLogout}>Log Out</button>
       <div className="profile-container">
         <div className="left-section">

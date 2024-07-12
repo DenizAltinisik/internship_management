@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Container, Typography, Box, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Button, TextField } from '@mui/material';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './css/Dashboard.css';
 
 const Dashboard = () => {
@@ -54,15 +54,6 @@ const Dashboard = () => {
         fetchTasks();
     }, [navigate]);
 
-    const getRandomColor = () => {
-        const letters = '0123456789ABCDEF';
-        let color = '#';
-        for (let i = 0; i < 6; i++) {
-            color += letters[Math.floor(Math.random() * 16)];
-        }
-        return color;
-    };
-
     const handleDragEnd = (result) => {
         const { destination, source, draggableId } = result;
         if (!destination) return;
@@ -99,7 +90,7 @@ const Dashboard = () => {
             console.log('Response:', response);
 
             if (response.status === 201) {
-                setTasks([...tasks, { ...newTaskObj, _id: response.data.task_id, color: getRandomColor() }]);
+                setTasks([...tasks, { ...newTaskObj, _id: response.data.task_id }]);
                 setNewTaskHeader('');
                 setNewTaskDetails('');
                 console.log('Task added successfully');
@@ -169,13 +160,13 @@ const Dashboard = () => {
     };
 
     return (
-        <Container maxWidth="lg">
-            <Box sx={{ mt: 4, mb: 4 }}>
-                <Typography variant="h4" component="h1" gutterBottom>
+        <Container maxWidth="lg" className="dashboard-container">
+            <Box sx={{ mb: 4 }}>
+                <Typography variant="h4" component="h1" gutterBottom sx={{ color: '#fff' }}>
                     Dashboard
                 </Typography>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="h6" component="h2">
+                    <Typography variant="h6" component="h2" sx={{ color: '#fff' }}>
                         Tasks
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '10px' }}>
@@ -187,40 +178,68 @@ const Dashboard = () => {
                 <DragDropContext onDragEnd={handleDragEnd}>
                     <Box sx={{ display: 'flex', gap: '20px' }}>
                         {['todo', 'test', 'done'].map((status) => (
-                            <Box key={status} sx={{ flex: '1 1 30%' }}>
-                                <Typography variant="h6" component="h3" gutterBottom>
-                                    {status.toUpperCase()}
-                                </Typography>
-                                <Droppable droppableId={status} key={status}>
-                                    {(provided) => (
-                                        <TableContainer component={Paper} {...provided.droppableProps} innerRef={provided.innerRef}>
+                            <Droppable key={status} droppableId={status}>
+                                {(provided) => (
+                                    <Box ref={provided.innerRef} {...provided.droppableProps} sx={{ flex: 1 }}>
+                                        <Typography variant="h6" component="h3" gutterBottom sx={{ color: '#fff' }}>
+                                            {status.toUpperCase()}
+                                        </Typography>
+                                        <TableContainer component={Paper}>
                                             <Table>
                                                 <TableBody>
                                                     {tasks.filter((task) => task.status === status).map((task, index) => (
                                                         <Draggable key={task._id} draggableId={task._id} index={index}>
                                                             {(provided) => (
-                                                                <TableRow ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className={`task-card ${status}`}>
+                                                                <TableRow
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}
+                                                                    className={`task-card ${status}`} // Apply status-specific class
+                                                                >
                                                                     <TableCell>
-                                                                        <Typography variant="subtitle1">{task.header}</Typography>
+                                                                        <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{task.header}</Typography>
                                                                         <Typography variant="body2">{task.details}</Typography>
-                                                                        {user?.role !== 'admin' && (
-                                                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                                                                        <Typography variant="caption">Owner: {task.owner}</Typography>
+                                                                    </TableCell>
+                                                                    <TableCell align="right">
+                                                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                                                                            {status !== 'done' && (
                                                                                 <Button
                                                                                     variant="contained"
-                                                                                    color="primary"
+                                                                                    size="small"
+                                                                                    sx={{
+                                                                                        backgroundColor: 'transparent',
+                                                                                        border: '1px solid black',
+                                                                                        color: 'black',
+                                                                                        '&:hover': {
+                                                                                            backgroundColor: 'black',
+                                                                                            color: 'white',
+                                                                                        },
+                                                                                    }}
                                                                                     onClick={() => moveForward(task._id)}
                                                                                 >
                                                                                     Move Forward
                                                                                 </Button>
+                                                                            )}
+                                                                            {status !== 'todo' && (
                                                                                 <Button
                                                                                     variant="contained"
-                                                                                    color="secondary"
+                                                                                    size="small"
+                                                                                    sx={{
+                                                                                        backgroundColor: 'transparent',
+                                                                                        border: '1px solid black',
+                                                                                        color: 'black',
+                                                                                        '&:hover': {
+                                                                                            backgroundColor: 'black',
+                                                                                            color: 'white',
+                                                                                        },
+                                                                                    }}
                                                                                     onClick={() => moveBackward(task._id)}
                                                                                 >
                                                                                     Move Backward
                                                                                 </Button>
-                                                                            </Box>
-                                                                        )}
+                                                                            )}
+                                                                        </Box>
                                                                     </TableCell>
                                                                 </TableRow>
                                                             )}
@@ -230,16 +249,12 @@ const Dashboard = () => {
                                                 </TableBody>
                                             </Table>
                                         </TableContainer>
-                                    )}
-                                </Droppable>
-                            </Box>
+                                    </Box>
+                                )}
+                            </Droppable>
                         ))}
                     </Box>
                 </DragDropContext>
-                <Button variant="contained" color="secondary" onClick={() => {
-                    localStorage.removeItem('token');
-                    navigate('/login');
-                }}>Log Out</Button>
             </Box>
         </Container>
     );

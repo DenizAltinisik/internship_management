@@ -1,25 +1,32 @@
+body {
+    background: linear-gradient(to bottom right, #0f83b2, #ffffff);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+.dashboard-container {
+    padding-top: 40px;
+}
+
 .task-card {
-    padding: 16px;
-    margin-bottom: 8px;
-    background-color: #f9f9f9;
     border-radius: 4px;
-    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    transition: background-color 0.3s ease; /* Transition effect for hover */
 }
 
-.task-card.todo {
-    border-left: 5px solid #ffeb3b;
+.todo {
+    background: linear-gradient(to bottom right, #e0e0e0, #ffffff); /* Light grey to white gradient */
 }
 
-.task-card.test {
-    border-left: 5px solid #03a9f4;
+.test {
+    background: linear-gradient(to bottom right, #aed581, #ffffff); /* Bright blue to white gradient */
 }
 
-.task-card.done {
-    border-left: 5px solid #4caf50;
+.done {
+    background: linear-gradient(to bottom right, #64b5f6, #ffffff); /* Light green to white gradient */
 }
 
-.task-card button {
-    padding: 4px 8px;
-    font-size: 12px;
-    min-width: 80px;
+.task-card:hover {
+    background-color: #f0f0f0; /* Example hover effect */
 }
