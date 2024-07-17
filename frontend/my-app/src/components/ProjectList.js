@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Container, Box, Typography, Button, List, ListItem, ListItemText, IconButton, Collapse } from '@mui/material';
+import { Container, Box, Typography, List, ListItem, ListItemText, IconButton, Collapse, Button } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import AddIcon from '@mui/icons-material/Add';
 import { useNavigate } from 'react-router-dom';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
@@ -14,6 +13,7 @@ function ProjectList({ onEdit }) {
   const [userNames, setUserNames] = useState({});
   const [open, setOpen] = useState({});
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
 
   const navigate = useNavigate();
 
@@ -26,6 +26,7 @@ function ProjectList({ onEdit }) {
       try {
         const response = await axios.get('https://localhost:5000/profile', config);
         setIsAdmin(response.data.role === 'admin');
+        setUserEmail(response.data.email);
       } catch (error) {
         console.error('Error fetching user role:', error);
       }
@@ -106,21 +107,13 @@ function ProjectList({ onEdit }) {
     }
   };
 
-  const handleAddNewProject = () => {
-    navigate('/projects/new');
-  };
-
   const handleEditProject = (project) => {
     onEdit(project);
     navigate('/projects/edit');
   };
 
   const handleEditTask = (task) => {
-    navigate(`/tasks/edit?taskId=${task._id}`);
-  };
-
-  const handleAddNewTask = (projectId) => {
-    navigate(`/tasks/new?projectId=${projectId}`);
+    navigate(`/tasks/edit/${task._id}`);
   };
 
   const handleToggle = (projectId) => {
@@ -167,30 +160,27 @@ function ProjectList({ onEdit }) {
                   </Typography>
                   <List component="div" disablePadding>
                     {tasks[project._id]?.length > 0 ? (
-                      tasks[project._id].map((task) => (
-                        <ListItem key={task._id} button onClick={() => handleEditTask(task)}>
+                      tasks[project._id].filter(task => isAdmin || task.owner === userEmail).map((task) => (
+                        <ListItem key={task._id}>
                           <ListItemText 
-                            primary={task.task_name} 
-                            secondary={`Description: ${task.description}, Status: ${task.status}, Assignee: ${userNames[task.assignee] || task.assignee}`} 
+                            primary={task.header} 
+                            secondary={`Description: ${task.details}, Status: ${task.status}, Assignee: ${userNames[task.owner] || task.owner}`} 
                           />
                           {isAdmin && (
-                            <IconButton edge="end" aria-label="delete" onClick={(e) => { e.stopPropagation(); handleDeleteTask(task._id); }}>
-                              <DeleteIcon />
-                            </IconButton>
+                            <>
+                              <IconButton edge="end" aria-label="edit" onClick={() => handleEditTask(task)}>
+                                <EditIcon />
+                              </IconButton>
+                              <IconButton edge="end" aria-label="delete" onClick={(e) => { e.stopPropagation(); handleDeleteTask(task._id); }}>
+                                <DeleteIcon />
+                              </IconButton>
+                            </>
                           )}
                         </ListItem>
                       ))
                     ) : (
                       <ListItem>
                         <ListItemText primary="No tasks assigned to this project." />
-                      </ListItem>
-                    )}
-                    {isAdmin && (
-                      <ListItem button onClick={() => handleAddNewTask(project._id)}>
-                        <ListItemText primary="Add New Task" />
-                        <IconButton edge="end" aria-label="add">
-                          <AddIcon />
-                        </IconButton>
                       </ListItem>
                     )}
                   </List>
@@ -203,7 +193,7 @@ function ProjectList({ onEdit }) {
           <Button
             variant="contained"
             color="primary" 
-            onClick={handleAddNewProject}
+            onClick={() => navigate('/projects/new')}
             sx={{ mr: 2 }}  // Margin-right to add some space between buttons
           >
             Add New Project

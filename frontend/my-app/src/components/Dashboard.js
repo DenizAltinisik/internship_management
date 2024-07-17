@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Container, Typography, Box, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Button, TextField } from '@mui/material';
+import { Container, Typography, Box, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Button, TextField, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { useNavigate } from 'react-router-dom';
 import './css/Dashboard.css';
@@ -8,8 +8,13 @@ import './css/Dashboard.css';
 const Dashboard = () => {
     const [user, setUser] = useState(null);
     const [tasks, setTasks] = useState([]);
+    const [projects, setProjects] = useState([]);
+    const [interns, setInterns] = useState([]);
     const [newTaskHeader, setNewTaskHeader] = useState('');
     const [newTaskDetails, setNewTaskDetails] = useState('');
+    const [selectedProject, setSelectedProject] = useState('');
+    const [selectedIntern, setSelectedIntern] = useState('');
+    const [selectedProjectForView, setSelectedProjectForView] = useState('');
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -25,6 +30,9 @@ const Dashboard = () => {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setUser(response.data);
+                if (response.data.role === 'admin') {
+                    fetchInterns(token);
+                }
             } catch (error) {
                 console.error(error);
                 alert('Failed to fetch profile data.');
@@ -50,8 +58,38 @@ const Dashboard = () => {
             }
         };
 
+        const fetchProjects = async () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                navigate('/login');
+                return;
+            }
+
+            try {
+                const response = await axios.get('https://localhost:5000/get_projects', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setProjects(response.data);
+            } catch (error) {
+                console.error(error);
+                alert('Failed to fetch projects.');
+            }
+        };
+
+        const fetchInterns = async (token) => {
+            try {
+                const response = await axios.get('https://localhost:5000/interns', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setInterns(response.data);
+            } catch (error) {
+                console.error('Failed to fetch interns:', error);
+            }
+        };
+
         fetchProfile();
         fetchTasks();
+        fetchProjects();
     }, [navigate]);
 
     const handleDragEnd = (result) => {
@@ -69,8 +107,8 @@ const Dashboard = () => {
     };
 
     const handleAddTask = async () => {
-        if (newTaskHeader.trim() === '' || newTaskDetails.trim() === '') {
-            console.log('Task header or details are empty');
+        if (newTaskHeader.trim() === '' || newTaskDetails.trim() === '' || selectedProject.trim() === '' || (user.role === 'admin' && selectedIntern.trim() === '')) {
+            console.log('Task header, details, project, or intern is empty');
             return;
         }
 
@@ -78,6 +116,8 @@ const Dashboard = () => {
             header: newTaskHeader,
             details: newTaskDetails,
             status: 'todo',
+            project_id: selectedProject,
+            owner: user.role === 'admin' ? selectedIntern : user.email
         };
 
         console.log('Sending new task:', newTaskObj);
@@ -93,6 +133,8 @@ const Dashboard = () => {
                 setTasks([...tasks, { ...newTaskObj, _id: response.data.task_id }]);
                 setNewTaskHeader('');
                 setNewTaskDetails('');
+                setSelectedProject('');
+                setSelectedIntern('');
                 console.log('Task added successfully');
             }
         } catch (error) {
@@ -159,21 +201,72 @@ const Dashboard = () => {
         setTasks(updatedTasks);
     };
 
+    const filteredTasks = selectedProjectForView ? tasks.filter(task => task.project_id === selectedProjectForView) : [];
+
     return (
         <Container maxWidth="lg" className="dashboard-container">
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" component="h1" gutterBottom sx={{ color: '#fff' }}>
                     Dashboard
                 </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="h6" component="h2" sx={{ color: '#fff' }}>
-                        Tasks
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: '10px' }}>
-                        <TextField label="Task Header" variant="outlined" size="small" value={newTaskHeader} onChange={(e) => handleInputChange(e, 'header')} />
-                        <TextField label="Task Details" variant="outlined" size="small" value={newTaskDetails} onChange={(e) => handleInputChange(e, 'details')} />
-                        <Button variant="contained" onClick={handleAddTask}>Add New Task</Button>
+                {user && user.role === 'admin' && (
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="h6" component="h2" sx={{ color: '#fff' }}>
+                            Add New Task
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: '10px' }}>
+                            <TextField label="Task Header" variant="outlined" size="small" value={newTaskHeader} onChange={(e) => handleInputChange(e, 'header')} />
+                            <TextField label="Task Details" variant="outlined" size="small" value={newTaskDetails} onChange={(e) => handleInputChange(e, 'details')} />
+                            <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
+                                <InputLabel>Project</InputLabel>
+                                <Select
+                                    value={selectedProject}
+                                    onChange={(e) => setSelectedProject(e.target.value)}
+                                    label="Project"
+                                >
+                                    {projects.map((project) => (
+                                        <MenuItem key={project._id} value={project._id}>
+                                            {project.project_name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                            <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
+                                <InputLabel>Assign to Intern</InputLabel>
+                                <Select
+                                    value={selectedIntern}
+                                    onChange={(e) => setSelectedIntern(e.target.value)}
+                                    label="Assign to Intern"
+                                >
+                                    {interns.map((intern) => (
+                                        <MenuItem key={intern.email} value={intern.email}>
+                                            {intern.name} {intern.surname}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                            <Button variant="contained" onClick={handleAddTask}>Add New Task</Button>
+                        </Box>
                     </Box>
+                )}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
+                        <InputLabel>Filter by Project</InputLabel>
+                        <Select
+                            value={selectedProjectForView}
+                            onChange={(e) => setSelectedProjectForView(e.target.value)}
+                            label="Filter by Project"
+                        >
+                            <MenuItem value="">
+                                <em>None</em>
+                            </MenuItem>
+                            {projects.map((project) => (
+                                <MenuItem key={project._id} value={project._id}>
+                                    {project.project_name}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
                 </Box>
                 <DragDropContext onDragEnd={handleDragEnd}>
                     <Box sx={{ display: 'flex', gap: '20px' }}>
@@ -187,7 +280,7 @@ const Dashboard = () => {
                                         <TableContainer component={Paper}>
                                             <Table>
                                                 <TableBody>
-                                                    {tasks.filter((task) => task.status === status).map((task, index) => (
+                                                    {filteredTasks.filter((task) => task.status === status).map((task, index) => (
                                                         <Draggable key={task._id} draggableId={task._id} index={index}>
                                                             {(provided) => (
                                                                 <TableRow
