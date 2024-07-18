@@ -15,7 +15,7 @@ const ProfilePage = () => {
       if (!token) {
         navigate('/login');
         return;
-      }
+      } 
 
       try {
         const response = await axios.get('https://localhost:5000/profile', {
@@ -41,22 +41,24 @@ const ProfilePage = () => {
     return <div className="loading">Loading...</div>;
   }
 
+  const profilePictureUrl = user.profile_picture ? `data:image/jpeg;base64,${btoa(user.profile_picture)}` : defaultProfilePicture;
+
   return (
     <div className="profile-page">
       <img src={logo} alt="Logo" className="logo" />
-      <button className="logout-button" onClick={handleLogout}>Log Out</button>
+      
       <div className="profile-container">
         <div className="left-section">
           <img
-            src={user.profile_picture || defaultProfilePicture}
+            src={profilePictureUrl}
             alt="Profile"
             className="profile-picture"
           />
           <nav className="tabs">
             <Link to="/dashboard" className="tab">Dashboard</Link>
-            <Link to="/tasks" className="tab">Tasks</Link>
+            
             <Link to="/projects" className="tab">Projects</Link>
-            <Link to="/todos" className="tab">Todos</Link>
+            
             <Link to="/changeProfile" className="tab">Change Profile</Link>
           </nav>
         </div>

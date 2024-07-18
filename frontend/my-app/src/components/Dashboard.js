@@ -10,6 +10,7 @@ const Dashboard = () => {
     const [tasks, setTasks] = useState([]);
     const [projects, setProjects] = useState([]);
     const [interns, setInterns] = useState([]);
+    const [userNames, setUserNames] = useState({});
     const [newTaskHeader, setNewTaskHeader] = useState('');
     const [newTaskDetails, setNewTaskDetails] = useState('');
     const [selectedProject, setSelectedProject] = useState('');
@@ -87,9 +88,22 @@ const Dashboard = () => {
             }
         };
 
+        const fetchUserNames = async () => {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await axios.get('https://localhost:5000/get_user_names', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setUserNames(response.data);
+            } catch (error) {
+                console.error('Failed to fetch user names:', error);
+            }
+        };
+
         fetchProfile();
         fetchTasks();
         fetchProjects();
+        fetchUserNames();
     }, [navigate]);
 
     const handleDragEnd = (result) => {
@@ -149,7 +163,7 @@ const Dashboard = () => {
 
     const handleCurrentTask = async (taskId, newStatus) => {
         try {
-            const response = await axios.put('https://localhost:5000/updateTaskStatus', { task_id: taskId, status: newStatus }, {
+            const response = await axios.put('https://localhost:5000/update_task_status', { task_id: taskId, status: newStatus }, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
             });
 
@@ -292,7 +306,7 @@ const Dashboard = () => {
                                                                     <TableCell>
                                                                         <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{task.header}</Typography>
                                                                         <Typography variant="body2">{task.details}</Typography>
-                                                                        <Typography variant="caption">Owner: {task.owner}</Typography>
+                                                                        <Typography variant="caption">Owner: {userNames[task.owner]}</Typography>
                                                                     </TableCell>
                                                                     <TableCell align="right">
                                                                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>

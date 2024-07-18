@@ -13,12 +13,9 @@ const HUD = ({ onLogout }) => {
       case 'profile':
         navigate('/profile');
         break;
-      case 'settings':
-        navigate('/settings');
-        break;
       case 'logout':
         onLogout();
-        navigate('/login');
+        navigate('/');
         break;
       default:
         break;
@@ -47,7 +44,7 @@ const HUD = ({ onLogout }) => {
         >
           <Tab label="Dashboard" value="dashboard" />
           <Tab label="Profile Page" value="profile" />
-          <Tab label="Settings" value="settings" />
+          
           <Tab label="Log Out" value="logout" />
         </Tabs>
       </Toolbar>

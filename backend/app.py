@@ -43,7 +43,19 @@ STATUS_TEST_ASAMASI = "test_asamasi"
 STATUS_YAPILDI = "yapildi"
 STATUS_TAKEN = "taken"
 
-# Add the task structure in user schema during registration
+
+def admin_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        current_user_email = get_jwt_identity()
+        user = db.users.find_one({"email": current_user_email})
+        if user and user.get("role") == "admin":
+            return fn(*args, **kwargs)
+        else:
+            return {"message": "Admin access required"}, 403
+    return wrapper
+
+
 class UserRegistration(Resource):
     def post(self):
         data = request.get_json()
@@ -84,6 +96,7 @@ class UserRegistration(Resource):
                 "school": school, 
                 "department": department,
                 "role": role,
+                "profile_picture": None,  # Initialize profile_picture as None
                 "tasks": []  # Initialize tasks as an empty list
             })
             logging.info(f"User {email} registered successfully")
@@ -119,16 +132,6 @@ class ProtectedResource(Resource):
         current_user = get_jwt_identity()
         return {"message": f"Hello, {current_user}"}, 200
 
-class UserProfile(Resource):
-    @jwt_required()
-    def get(self):
-        current_user_email = get_jwt_identity()
-        user = db.users.find_one({"email": current_user_email}, {"_id": 0, "password": 0})
-        if user:
-            return jsonify(user)
-        else:
-            return {"message": "User not found"}, 404
-        
 class UserProfileUpdate(Resource):
     @jwt_required()
     def put(self):
@@ -147,9 +150,8 @@ class UserProfileUpdate(Resource):
 
         if 'profile_picture' in request.files:
             profile_picture_file = request.files['profile_picture']
-            profile_picture_path = os.path.join(app.config['UPLOAD_FOLDER'], profile_picture_file.filename)
-            profile_picture_file.save(profile_picture_path)
-            update_fields["profile_picture"] = profile_picture_path
+            profile_picture_binary = profile_picture_file.read()  # Read file as binary
+            update_fields["profile_picture"] = profile_picture_binary
 
         try:
             result = db.users.update_one({"email": current_user_email}, {"$set": update_fields})
@@ -159,6 +161,20 @@ class UserProfileUpdate(Resource):
                 return {"message": "User not found"}, 404
         except Exception as e:
             return {"message": str(e)}, 500
+
+
+class UserProfile(Resource):
+    @jwt_required()
+    def get(self):
+        current_user_email = get_jwt_identity()
+        user = db.users.find_one({"email": current_user_email}, {"_id": 0, "password": 0})
+
+        if user:
+            if user.get("profile_picture"):
+                user["profile_picture"] = user["profile_picture"].decode('latin1')
+            return jsonify(user)
+        else:
+            return {"message": "User not found"}, 404
 
 class UserTasks(Resource):
     @jwt_required()
@@ -180,9 +196,9 @@ class UserTasks(Resource):
         else:
             return {"message": "User not found"}, 404
 
-
 class AddTask(Resource):
     @jwt_required()
+    @admin_required
     def post(self):
         try:
             data = request.get_json()
@@ -194,24 +210,23 @@ class AddTask(Resource):
             task_header = data.get('header')
             task_details = data.get('details')
             task_status = data.get('status')
+            project_id = data.get('project_id')
+            owner = data.get('owner')  # Yeni alan
 
-            if not task_header or not task_details or not task_status:
-                return {"message": "Header, details, and status are required"}, 400
-
-            current_user_email = get_jwt_identity()
-            user = db.users.find_one({"email": current_user_email}, {"name": 1, "surname": 1})
-            owner_name = f"{user['name']} {user['surname']}"
+            if not task_header or not task_details or not task_status or not project_id or not owner:
+                return {"message": "Header, details, status, project_id, and owner are required"}, 400
 
             task = {
                 "_id": str(ObjectId()),  # Generate a new ObjectId
                 "header": task_header,
                 "details": task_details,
                 "status": task_status,
-                "owner": owner_name  # Add the owner's name to the task
+                "owner": owner,  # Görevi atanan intern
+                "project_id": project_id
             }
 
-            db.users.update_one({"email": current_user_email}, {"$push": {"tasks": task}})
-            return {"message": "Task added successfully"}, 201
+            db.users.update_one({"email": owner}, {"$push": {"tasks": task}})
+            return {"message": "Task added successfully", "task_id": task["_id"]}, 201
         except Exception as e:
             app.logger.error(f"Error adding task: {e}")
             return {"message": str(e)}, 500
@@ -229,10 +244,8 @@ class UpdateTaskStatus(Resource):
             if not task_id or not new_status:
                 return {"message": "Task ID and new status are required"}, 400
 
-            current_user_email = get_jwt_identity()
-
             result = db.users.update_one(
-                {"email": current_user_email, "tasks._id": task_id},
+                {"tasks._id": task_id},
                 {"$set": {"tasks.$.status": new_status}}
             )
 
@@ -243,7 +256,6 @@ class UpdateTaskStatus(Resource):
         except Exception as e:
             app.logger.error(f"Error updating task status: {e}")
             return {"message": str(e)}, 500
-        
 
 class GetProjects(Resource):
     @jwt_required()
@@ -270,23 +282,28 @@ class GetProjectTasks(Resource):
     @jwt_required()
     def get(self, project_id):
         try:
-            tasks = list(db.tasks.find({"project_id": project_id}))
+            tasks = list(db.users.aggregate([
+                {"$unwind": "$tasks"},
+                {"$match": {"tasks.project_id": project_id}},
+                {"$replaceRoot": {"newRoot": "$tasks"}}
+            ]))
             for task in tasks:
                 task['_id'] = str(task['_id'])
             return jsonify(tasks)
         except Exception as e:
             return {"message": str(e)}, 500
 
-def admin_required(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        current_user_email = get_jwt_identity()
-        user = db.users.find_one({"email": current_user_email})
-        if user and user.get("role") == "admin":
-            return fn(*args, **kwargs)
-        else:
-            return {"message": "Admin access required"}, 403
-    return wrapper
+class Interns(Resource):
+    @jwt_required()
+    def get(self):
+        try:
+            interns = db.users.find({"role": "intern"}, {"email": 1, "name": 1, "surname": 1, "_id": 0})
+            interns_list = list(interns)
+            return jsonify(interns_list)
+        except Exception as e:
+            return {"message": str(e)}, 500
+
+
 
 class AddProject(Resource):
     @jwt_required()
@@ -376,6 +393,76 @@ class AssignTaskToProject(Resource):
         except Exception as e:
             return {"message": str(e)}, 500
 
+
+class DeleteTask(Resource):
+    @jwt_required()
+    @admin_required
+    def delete(self, task_id):
+        try:
+            result = db.users.update_many(
+                {"tasks._id": task_id},
+                {"$pull": {"tasks": {"_id": task_id}}}
+            )
+            if result.modified_count > 0:
+                return {"message": "Task deleted successfully"}, 200
+            else:
+                return {"message": "Task not found"}, 404
+        except Exception as e:
+            return {"message": str(e)}, 500
+
+class UpdateTask(Resource):
+    @jwt_required()
+    @admin_required
+    def put(self, task_id):
+        try:
+            data = request.get_json()
+            app.logger.debug(f"Received data for update: {data}")
+
+            update_fields = {
+                "tasks.$.header": data.get('header'),
+                "tasks.$.details": data.get('details'),
+                "tasks.$.status": data.get('status'),
+                "tasks.$.owner": data.get('owner')
+            }
+
+            # Önceki sahipten görevi kaldır
+            db.users.update_one(
+                {"tasks._id": task_id},
+                {"$pull": {"tasks": {"_id": task_id}}}
+            )
+
+            # Yeni sahip ekle
+            task = {
+                "_id": task_id,
+                "header": data.get('header'),
+                "details": data.get('details'),
+                "status": data.get('status'),
+                "owner": data.get('owner'),
+                "project_id": data.get('project_id')
+            }
+            db.users.update_one({"email": data.get('owner')}, {"$push": {"tasks": task}})
+
+            return {"message": "Task updated successfully"}, 200
+        except Exception as e:
+            return {"message": str(e)}, 500
+
+
+
+class GetTask(Resource):
+    @jwt_required()
+    def get(self, task_id):
+        try:
+            user = db.users.find_one({"tasks._id": task_id}, {"tasks.$": 1})
+            if user and 'tasks' in user:
+                return jsonify(user['tasks'][0])
+            else:
+                return {"message": "Task not found"}, 404
+        except Exception as e:
+            return {"message": str(e)}, 500
+
+
+
+
 api.add_resource(UserRegistration, '/register')
 api.add_resource(UserLogin, '/login')
 api.add_resource(ProtectedResource, '/protected')
@@ -383,7 +470,7 @@ api.add_resource(UserProfile, '/profile')
 api.add_resource(UserProfileUpdate, '/profile')
 api.add_resource(UserTasks, '/tasks')
 api.add_resource(AddTask, '/addTask')
-api.add_resource(UpdateTaskStatus, '/updateTaskStatus')
+api.add_resource(UpdateTaskStatus, '/update_task_status')
 api.add_resource(GetProjects, '/get_projects')
 api.add_resource(GetProjectTasks, '/get_project_tasks/<project_id>')
 api.add_resource(GetUserNames, '/get_user_names')
@@ -391,6 +478,10 @@ api.add_resource(AddProject, '/add_project')
 api.add_resource(UpdateProject, '/update_project/<project_id>')
 api.add_resource(DeleteProject, '/delete_project/<project_id>')
 api.add_resource(AssignTaskToProject, '/assign_task_to_project/<project_id>')
+api.add_resource(Interns, '/interns')
+api.add_resource(DeleteTask, '/delete_task/<task_id>')
+api.add_resource(UpdateTask, '/update_task/<task_id>')
+api.add_resource(GetTask, '/get_task/<task_id>')
 
 if __name__ == '__main__':
-   app.run(debug=True, ssl_context=('server.crt', 'server.key'))
+    app.run(debug=True, ssl_context=('server.crt', 'server.key'))
