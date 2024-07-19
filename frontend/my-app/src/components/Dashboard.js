@@ -27,7 +27,7 @@ const Dashboard = () => {
             }
 
             try {
-                const response = await axios.get('https://localhost:5000/profile', {
+                const response = await axios.get('http://localhost:5000/profile', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setUser(response.data);
@@ -49,7 +49,7 @@ const Dashboard = () => {
             }
 
             try {
-                const response = await axios.get('https://localhost:5000/tasks', {
+                const response = await axios.get('http://localhost:5000/tasks', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setTasks(response.data);
@@ -67,7 +67,7 @@ const Dashboard = () => {
             }
 
             try {
-                const response = await axios.get('https://localhost:5000/get_projects', {
+                const response = await axios.get('http://localhost:5000/get_projects', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setProjects(response.data);
@@ -79,7 +79,7 @@ const Dashboard = () => {
 
         const fetchInterns = async (token) => {
             try {
-                const response = await axios.get('https://localhost:5000/interns', {
+                const response = await axios.get('http://localhost:5000/interns', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setInterns(response.data);
@@ -91,7 +91,7 @@ const Dashboard = () => {
         const fetchUserNames = async () => {
             const token = localStorage.getItem('token');
             try {
-                const response = await axios.get('https://localhost:5000/get_user_names', {
+                const response = await axios.get('http://localhost:5000/get_user_names', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setUserNames(response.data);
@@ -137,7 +137,7 @@ const Dashboard = () => {
         console.log('Sending new task:', newTaskObj);
 
         try {
-            const response = await axios.post('https://localhost:5000/addTask', newTaskObj, {
+            const response = await axios.post('http://localhost:5000/addTask', newTaskObj, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
             });
 
@@ -163,7 +163,7 @@ const Dashboard = () => {
 
     const handleCurrentTask = async (taskId, newStatus) => {
         try {
-            const response = await axios.put('https://localhost:5000/update_task_status', { task_id: taskId, status: newStatus }, {
+            const response = await axios.put('http://localhost:5000/update_task_status', { task_id: taskId, status: newStatus }, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
             });
 

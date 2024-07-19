@@ -23,7 +23,7 @@ function TaskEdit() {
                 headers: { Authorization: `Bearer ${token}` }
             };
             try {
-                const response = await axios.get('https://localhost:5000/profile', config);
+                const response = await axios.get('http://localhost:5000/profile', config);
                 if (response.data.role !== 'admin') {
                     navigate('/projects');
                     return;
@@ -41,7 +41,7 @@ function TaskEdit() {
                 headers: { Authorization: `Bearer ${token}` }
             };
             try {
-                const response = await axios.get(`https://localhost:5000/get_task/${taskId}`, config);
+                const response = await axios.get(`http://localhost:5000/get_task/${taskId}`, config);
                 setTaskData(response.data);
             } catch (error) {
                 console.error('Error fetching task:', error);
@@ -54,7 +54,7 @@ function TaskEdit() {
                 headers: { Authorization: `Bearer ${token}` }
             };
             try {
-                const response = await axios.get('https://localhost:5000/interns', config);
+                const response = await axios.get('http://localhost:5000/interns', config);
                 setInterns(response.data);
             } catch (error) {
                 console.error('Error fetching interns:', error);
@@ -81,7 +81,7 @@ function TaskEdit() {
             headers: { Authorization: `Bearer ${token}` }
         };
         try {
-            await axios.put(`https://localhost:5000/update_task/${taskId}`, taskData, config);
+            await axios.put(`http://localhost:5000/update_task/${taskId}`, taskData, config);
             alert('Task updated successfully!');
             navigate('/projects');
         } catch (error) {

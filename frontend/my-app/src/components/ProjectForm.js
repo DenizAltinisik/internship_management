@@ -20,7 +20,7 @@ function ProjectForm({ project, onSave }) {
         headers: { Authorization: `Bearer ${token}` }
       };
       try {
-        const response = await axios.get('https://localhost:5000/profile', config);
+        const response = await axios.get('http://localhost:5000/profile', config);
         setIsAdmin(response.data.role === 'admin');
       } catch (error) {
         console.error('Error fetching user role:', error);
@@ -50,10 +50,10 @@ function ProjectForm({ project, onSave }) {
     };
     try {
       if (project) {
-        await axios.put(`https://localhost:5000/update_project/${project._id}`, projectData, config);
+        await axios.put(`http://localhost:5000/update_project/${project._id}`, projectData, config);
         alert('Project updated successfully!');
       } else {
-        await axios.post('https://localhost:5000/add_project', projectData, config);
+        await axios.post('http://localhost:5000/add_project', projectData, config);
         alert('Project added successfully!');
       }
       onSave();

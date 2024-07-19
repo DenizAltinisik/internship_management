@@ -18,7 +18,7 @@ const ProfilePage = () => {
       } 
 
       try {
-        const response = await axios.get('https://localhost:5000/profile', {
+        const response = await axios.get('http://localhost:5000/profile', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUser(response.data);

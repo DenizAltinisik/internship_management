@@ -24,7 +24,7 @@ function ProjectList({ onEdit }) {
         headers: { Authorization: `Bearer ${token}` }
       };
       try {
-        const response = await axios.get('https://localhost:5000/profile', config);
+        const response = await axios.get('http://localhost:5000/profile', config);
         setIsAdmin(response.data.role === 'admin');
         setUserEmail(response.data.email);
       } catch (error) {
@@ -43,7 +43,7 @@ function ProjectList({ onEdit }) {
       const config = {
         headers: { Authorization: `Bearer ${token}` }
       };
-      const response = await axios.get('https://localhost:5000/get_projects', config);
+      const response = await axios.get('http://localhost:5000/get_projects', config);
       setProjects(response.data);
       fetchTasksForProjects(response.data);
     } catch (error) {
@@ -59,7 +59,7 @@ function ProjectList({ onEdit }) {
         const config = {
           headers: { Authorization: `Bearer ${token}` }
         };
-        const response = await axios.get(`https://localhost:5000/get_project_tasks/${project._id}`, config);
+        const response = await axios.get(`http://localhost:5000/get_project_tasks/${project._id}`, config);
         tasks[project._id] = response.data;
       } catch (error) {
         console.error(`Error fetching tasks for project ${project._id}:`, error);
@@ -74,7 +74,7 @@ function ProjectList({ onEdit }) {
       const config = {
         headers: { Authorization: `Bearer ${token}` }
       };
-      const response = await axios.get('https://localhost:5000/get_user_names', config);
+      const response = await axios.get('http://localhost:5000/get_user_names', config);
       setUserNames(response.data);
     } catch (error) {
       console.error('Error fetching user names:', error);
@@ -87,7 +87,7 @@ function ProjectList({ onEdit }) {
       const config = {
         headers: { Authorization: `Bearer ${token}` }
       };
-      await axios.delete(`https://localhost:5000/delete_project/${projectId}`, config);
+      await axios.delete(`http://localhost:5000/delete_project/${projectId}`, config);
       fetchProjects();
     } catch (error) {
       console.error('Error deleting project:', error);
@@ -100,7 +100,7 @@ function ProjectList({ onEdit }) {
       const config = {
         headers: { Authorization: `Bearer ${token}` }
       };
-      await axios.delete(`https://localhost:5000/delete_task/${taskId}`, config);
+      await axios.delete(`http://localhost:5000/delete_task/${taskId}`, config);
       fetchProjects();
     } catch (error) {
       console.error('Error deleting task:', error);

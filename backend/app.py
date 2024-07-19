@@ -484,4 +484,4 @@ api.add_resource(UpdateTask, '/update_task/<task_id>')
 api.add_resource(GetTask, '/get_task/<task_id>')
 
 if __name__ == '__main__':
-    app.run(debug=True, ssl_context=('server.crt', 'server.key'))
+    app.run(host='0.0.0.0', port=5000)
